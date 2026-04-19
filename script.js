@@ -1,9 +1,13 @@
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+// Use the HTTPS-compliant mirror to avoid "Mixed Content" errors
+const OVERPASS_URL = "https://overpass.openstreetmap.fr/api/interpreter";
 
 function getLocationCachedOrNew() {
+  const status = document.getElementById('status-message');
+  status.innerText = "Getting your location...";
+  
   const cache = JSON.parse(localStorage.getItem('cachedLocation') || '{}');
   const now = Date.now();
-  // Cache location for 10 minutes
+
   if (cache.timestamp && now - cache.timestamp < 10 * 60 * 1000) {
     useLocation(cache.lat, cache.lng);
   } else {
@@ -12,14 +16,22 @@ function getLocationCachedOrNew() {
       const lng = pos.coords.longitude;
       localStorage.setItem('cachedLocation', JSON.stringify({ lat, lng, timestamp: now }));
       useLocation(lat, lng);
-    }, () => alert("Location access denied or unavailable."));
+    }, () => {
+      status.innerText = "Location access denied.";
+      alert("Please enable location services.");
+    });
   }
 }
 
 async function useLocation(lat, lng) {
-  // Overpass QL Query: finds nodes tagged as 'amenity=cafe' within 1500m
+  const status = document.getElementById('status-message');
+  const container = document.querySelector('.cards');
+  status.innerText = "Searching for cafes nearby...";
+  container.innerHTML = '';
+
+  // Added [timeout:25] for better reliability
   const query = `
-    [out:json];
+    [out:json][timeout:25];
     node["amenity"="cafe"](around:1500, ${lat}, ${lng});
     out body;
   `;
@@ -29,32 +41,30 @@ async function useLocation(lat, lng) {
       method: "POST",
       body: query
     });
-    const data = await response.json();
     
+    if (!response.ok) throw new Error("Network response was not ok");
+    
+    const data = await response.json();
+    status.innerText = ""; // Clear status
+
     if (data.elements && data.elements.length > 0) {
       displayCards(data.elements);
     } else {
-      alert("No cafes found in this area.");
+      status.innerText = "No cafes found in this 1.5km radius.";
     }
   } catch (e) {
-    console.error("Error fetching Overpass API:", e);
-    alert("Error fetching cafes.");
+    console.error("Fetch error:", e);
+    status.innerText = "Error fetching cafes. Please try again.";
   }
 }
 
 function displayCards(cafes) {
   const container = document.querySelector('.cards');
-  container.innerHTML = '';
-
   cafes.forEach((cafe, i) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'swipe-wrapper';
     wrapper.style.zIndex = 200 - i;
 
-    const card = document.createElement('div');
-    card.className = 'location-card';
-
-    // Using Unsplash Source for free relevant imagery
     const imgUrl = `https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80&sig=${cafe.id}`;
     
     const cafeData = {
@@ -64,17 +74,17 @@ function displayCards(cafes) {
       cuisine: cafe.tags.cuisine || "Coffee & Tea"
     };
 
-    card.innerHTML = `
-      <img src="${imgUrl}" alt="${cafeData.name}" />
-      <h3>${cafeData.name}</h3>
-      <p>📍 ${cafeData.cuisine}</p>
-      <p><small>Swipe right to save 💖</small></p>
+    wrapper.innerHTML = `
+      <div class="location-card">
+        <img src="${imgUrl}" alt="${cafeData.name}" />
+        <h3>${cafeData.name}</h3>
+        <p>📍 ${cafeData.cuisine}</p>
+        <p><small>Swipe right to save 💖</small></p>
+      </div>
     `;
 
-    wrapper.appendChild(card);
     container.appendChild(wrapper);
 
-    // Gestures
     const hammertime = new Hammer(wrapper);
     hammertime.on('swipeleft', () => {
       wrapper.style.transform = 'translateX(-150%) rotate(-15deg)';
@@ -96,12 +106,13 @@ function saveCafe(cafe) {
   if (!saved.find(c => c.id === cafe.id)) {
     saved.push(cafe);
     localStorage.setItem('savedCafes', JSON.stringify(saved));
-    console.log(`${cafe.name} saved!`);
   }
 }
 
 function showSaved() {
   const container = document.querySelector('.cards');
+  const status = document.getElementById('status-message');
+  status.innerText = "";
   container.innerHTML = '<h2>Saved Favorites</h2>';
   const saved = JSON.parse(localStorage.getItem('savedCafes') || '[]');
   
@@ -121,4 +132,3 @@ function showSaved() {
     container.appendChild(card);
   });
 }
-//updated project

@@ -1,51 +1,63 @@
 body {
-background-color: rgb(193, 236, 163);
-font-family: "Savate", sans-serif;
-text-align: center;
-padding: 1rem;
+  font-family: 'Savate', serif;
+  text-align: center;
+  background-color: #fdf6e3;
+  color: #5d4037;
+  margin: 0;
+  padding: 20px;
 }
 
+.controls { margin-bottom: 20px; }
+
 button {
-font-family: "Savate", sans-serif;
-font-size: 20px;
-background-color: darkgreen;
-color: white;
-border-radius: 10vw;
-padding: 1vw;
-outline-style: none;
-border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #6f4e37;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 5px;
+}
+
+#status-message {
+  height: 20px;
+  margin: 10px;
+  font-weight: bold;
 }
 
 .cards {
-    position: relative;
-    width: 100%;
-    max-width: 300px;
-    margin: 2rem auto;
-    height: 400px;
-}
-.swipe-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-.location-card {
-    width: 100%;
-    background: white;
-    border-radius: 10px;
-    /* box-shadow: 0 2px 8px rgba(0,0,0,0.05); */
-    overflow: hidden;
-    text-align: center;
-    padding: 1rem;
-    margin-bottom: 1vh;
-}
-.location-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
+  position: relative;
+  height: 450px;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
 }
 
-button:hover {
-    background: #555;
+.swipe-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.location-card {
+  background: white;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+}
+
+.location-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.location-card.saved {
+  position: static;
+  margin-bottom: 20px;
 }
