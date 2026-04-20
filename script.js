@@ -8,6 +8,8 @@ const LOCATION_CACHE_TTL = 10 * 60 * 1000;
 const GOOGLE_SCRIPT_ID = "google-maps-js";
 
 let googleMapsLoaderPromise;
+let currentSearchLocation = null;
+let currentDeck = [];
 
 function getCardsContainer() {
   return document.querySelector(".cards");
@@ -19,6 +21,10 @@ function getStatusElement() {
 
 function getSavedCountElement() {
   return document.getElementById("saved-count");
+}
+
+function getRadiusSelect() {
+  return document.getElementById("radius-select");
 }
 
 function setStatus(message, isError = false) {
@@ -35,6 +41,10 @@ function updateSavedCount() {
 
 function hasGooglePlacesKey() {
   return GOOGLE_MAPS_API_KEY.trim().length > 0;
+}
+
+function getSearchRadius() {
+  return Number(getRadiusSelect()?.value || SEARCH_RADIUS);
 }
 
 function getLocationCachedOrNew() {
@@ -58,6 +68,7 @@ function getLocationCachedOrNew() {
         JSON.stringify({ lat, lng, timestamp: now })
       );
 
+      currentSearchLocation = { lat, lng };
       useLocation(lat, lng);
     },
     () => {
@@ -68,6 +79,8 @@ function getLocationCachedOrNew() {
 }
 
 async function useLocation(lat, lng) {
+  currentSearchLocation = { lat, lng };
+
   if (hasGooglePlacesKey()) {
     await useGooglePlaces(lat, lng);
     return;
@@ -85,6 +98,7 @@ async function useGooglePlaces(lat, lng) {
   container.classList.remove("saved-view");
   container.innerHTML = "";
   setStatus("Finding top cafes near you with Google Places...");
+  const radius = getSearchRadius();
 
   try {
     await loadGoogleMapsApi();
@@ -102,7 +116,7 @@ async function useGooglePlaces(lat, lng) {
       ],
       locationRestriction: {
         center: { lat, lng },
-        radius: SEARCH_RADIUS
+        radius
       },
       includedPrimaryTypes: ["cafe"],
       maxResultCount: 20,
@@ -113,10 +127,12 @@ async function useGooglePlaces(lat, lng) {
     const cafes = (places || []).map(normalizeGoogleCafe).filter(Boolean);
 
     if (cafes.length === 0) {
+      currentDeck = [];
       setStatus("No cafes found in this area.");
       return;
     }
 
+    currentDeck = cafes;
     setStatus(`Found ${cafes.length} cafes with Google Places. Swipe right to save your favorites.`);
     displayCards(cafes);
   } catch (error) {
@@ -191,12 +207,13 @@ function normalizeGoogleCafe(place) {
 }
 
 async function useOpenStreetMap(lat, lng) {
+  const radius = getSearchRadius();
   const query = `
     [out:json][timeout:25];
     (
-      node["amenity"="cafe"](around:${SEARCH_RADIUS},${lat},${lng});
-      way["amenity"="cafe"](around:${SEARCH_RADIUS},${lat},${lng});
-      relation["amenity"="cafe"](around:${SEARCH_RADIUS},${lat},${lng});
+      node["amenity"="cafe"](around:${radius},${lat},${lng});
+      way["amenity"="cafe"](around:${radius},${lat},${lng});
+      relation["amenity"="cafe"](around:${radius},${lat},${lng});
     );
     out center tags;
   `;
@@ -223,10 +240,12 @@ async function useOpenStreetMap(lat, lng) {
     const cafes = await enrichCafes(normalizeFallbackCafes(data.elements || []));
 
     if (cafes.length === 0) {
+      currentDeck = [];
       setStatus("No cafes found in this area.");
       return;
     }
 
+    currentDeck = cafes;
     setStatus(`Found ${cafes.length} cafes. Photos and ratings will improve once a Google Maps API key is added.`, true);
     displayCards(cafes);
   } catch (error) {
@@ -376,6 +395,7 @@ function renderMapsLink(mapsUrl) {
 function displayCards(cafes) {
   const container = getCardsContainer();
   container.innerHTML = "";
+  container.classList.remove("saved-view");
 
   cafes.forEach((cafe, index) => {
     const wrapper = document.createElement("div");
@@ -410,25 +430,87 @@ function displayCards(cafes) {
     const hammer = new Hammer(wrapper);
 
     hammer.on("swipeleft", () => {
-      wrapper.style.transform = "translateX(-150%) rotate(-12deg)";
-      wrapper.style.opacity = "0";
-      setTimeout(() => wrapper.remove(), 180);
+      dismissCard(wrapper, cafe, false);
     });
 
     hammer.on("swiperight", () => {
-      saveCafe(cafe);
-      wrapper.style.transform = "translateX(150%) rotate(12deg)";
-      wrapper.style.opacity = "0";
-      setTimeout(() => wrapper.remove(), 180);
+      dismissCard(wrapper, cafe, true);
     });
   });
 }
 
-function saveCafe(cafe) {
+function dismissCard(wrapper, cafe, shouldSave) {
+  if (shouldSave) {
+    saveCafe(cafe, { silent: true });
+  }
+
+  currentDeck = currentDeck.filter((item) => item.place_id !== cafe.place_id);
+  wrapper.style.transform = shouldSave
+    ? "translateX(150%) rotate(12deg)"
+    : "translateX(-150%) rotate(-12deg)";
+  wrapper.style.opacity = "0";
+  setTimeout(() => {
+    wrapper.remove();
+    handleDeckCompletion();
+  }, 180);
+}
+
+function getTopCardWrapper() {
+  return getCardsContainer().querySelector(".swipe-wrapper");
+}
+
+function skipTopCard() {
+  const wrapper = getTopCardWrapper();
+  if (!wrapper) {
+    setStatus("No more cafes in the current deck. Refresh to load more.");
+    return;
+  }
+
+  const card = currentDeck[0];
+  if (!card) {
+    setStatus("No more cafes in the current deck. Refresh to load more.");
+    return;
+  }
+
+  dismissCard(wrapper, card, false);
+}
+
+function saveTopCard() {
+  const wrapper = getTopCardWrapper();
+  if (!wrapper) {
+    setStatus("No more cafes in the current deck. Refresh to load more.");
+    return;
+  }
+
+  const card = currentDeck[0];
+  if (!card) {
+    setStatus("No more cafes in the current deck. Refresh to load more.");
+    return;
+  }
+
+  dismissCard(wrapper, card, true);
+}
+
+function handleDeckCompletion() {
+  if (currentDeck.length > 0) {
+    return;
+  }
+
+  const container = getCardsContainer();
+  if (!container.classList.contains("saved-view") && !container.querySelector(".empty-state")) {
+    container.innerHTML = '<p class="empty-state">You reached the end of this deck. Refresh results or change the radius to explore more cafes.</p>';
+    setStatus("Deck complete. Refresh results or adjust the radius for more cafes.");
+  }
+}
+
+function saveCafe(cafe, options = {}) {
+  const { silent = false } = options;
   const saved = JSON.parse(localStorage.getItem(SAVED_CAFES_KEY) || "[]");
 
   if (saved.find((item) => item.place_id === cafe.place_id)) {
-    setStatus(`${cafe.name} is already saved.`);
+    if (!silent) {
+      setStatus(`${cafe.name} is already saved.`);
+    }
     return;
   }
 
@@ -472,10 +554,43 @@ function showSaved() {
           ${renderRatingCount(cafe.ratingCount)}
         </div>
         ${renderPhotoAttribution(cafe.photoAttribution)}
+        <div class="saved-actions">
+          <button class="ghost-button small-button" onclick="removeSavedCafe('${cafe.place_id}')">Remove</button>
+        </div>
       </div>
     `;
     container.appendChild(card);
   });
+}
+
+function removeSavedCafe(placeId) {
+  const saved = JSON.parse(localStorage.getItem(SAVED_CAFES_KEY) || "[]");
+  const nextSaved = saved.filter((cafe) => cafe.place_id !== placeId);
+
+  localStorage.setItem(SAVED_CAFES_KEY, JSON.stringify(nextSaved));
+  updateSavedCount();
+  setStatus("Cafe removed from your saved list.");
+  showSaved();
+}
+
+function clearSavedCafes() {
+  localStorage.setItem(SAVED_CAFES_KEY, JSON.stringify([]));
+  updateSavedCount();
+  setStatus("Saved cafes cleared.");
+
+  const container = getCardsContainer();
+  if (container.classList.contains("saved-view")) {
+    showSaved();
+  }
+}
+
+function refreshCurrentSearch() {
+  if (currentSearchLocation) {
+    useLocation(currentSearchLocation.lat, currentSearchLocation.lng);
+    return;
+  }
+
+  getLocationCachedOrNew();
 }
 
 updateSavedCount();

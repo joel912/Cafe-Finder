@@ -112,6 +112,43 @@ h3 {
     gap: 12px;
 }
 
+.toolbar,
+.deck-actions,
+.saved-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.toolbar {
+    justify-content: space-between;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.field span {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+select {
+    min-width: 130px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font: inherit;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.85);
+}
+
 button {
     border: 0;
     border-radius: 999px;
@@ -135,6 +172,17 @@ button:hover {
 .secondary-button {
     color: var(--accent-strong);
     background: #f6e8d8;
+}
+
+.ghost-button {
+    color: var(--accent-strong);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--line);
+}
+
+.small-button {
+    padding: 10px 16px;
+    font-size: 0.92rem;
 }
 
 .meta-row {
@@ -191,6 +239,15 @@ button:hover {
     width: min(100%, 460px);
     height: 680px;
     margin-top: 20px;
+}
+
+.deck-actions {
+    width: min(100%, 460px);
+    margin-top: 16px;
+}
+
+.deck-actions button {
+    flex: 1;
 }
 
 .swipe-wrapper {
@@ -305,6 +362,10 @@ button:hover {
     height: 100%;
 }
 
+.saved-actions {
+    margin-top: 18px;
+}
+
 .empty-state {
     display: block;
     width: 100%;
@@ -324,6 +385,10 @@ code {
     .hero,
     .app-grid {
         grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        justify-content: flex-start;
     }
 
     .cards {
