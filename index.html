@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cafe Curator</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>C</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Savate:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>☕️ Cafe Curator 🍵</h1>
+  <h1>Cafe Curator</h1>
   <p>Find and save the best cafes near you.</p>
 
-  <div class="controls">
+  <div class="actions">
     <button onclick="getLocationCachedOrNew()">Find Cafes Near Me</button>
     <button onclick="showSaved()">Show Saved Cafes</button>
   </div>
 
-  <div id="status-message"></div>
+  <p id="status" aria-live="polite"></p>
   <div class="cards"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,63 +1,85 @@
 body {
-  font-family: 'Savate', serif;
-  text-align: center;
-  background-color: #fdf6e3;
-  color: #5d4037;
-  margin: 0;
-  padding: 20px;
+    margin: 0;
+    background-color: rgb(193, 236, 163);
+    font-family: "Savate", sans-serif;
+    text-align: center;
+    padding: 1rem;
 }
-
-.controls { margin-bottom: 20px; }
 
 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  background: #6f4e37;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  margin: 5px;
+    font-family: "Savate", sans-serif;
+    font-size: 20px;
+    background-color: darkgreen;
+    color: white;
+    border-radius: 10vw;
+    padding: 0.8rem 1.2rem;
+    outline-style: none;
+    border: none;
+    cursor: pointer;
+    margin: 0.3rem;
 }
 
-#status-message {
-  height: 20px;
-  margin: 10px;
-  font-weight: bold;
+button:hover {
+    background: #555;
+}
+
+.actions {
+    margin-top: 1rem;
+}
+
+#status {
+    min-height: 1.5rem;
+    font-weight: 600;
+}
+
+#status.error {
+    color: #8b1e1e;
 }
 
 .cards {
-  position: relative;
-  height: 450px;
-  width: 100%;
-  max-width: 350px;
-  margin: 0 auto;
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 2rem auto;
+    height: 430px;
 }
 
 .swipe-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .location-card {
-  background: white;
-  border-radius: 15px;
-  padding: 15px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  border: 1px solid #ddd;
+    width: 100%;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
 }
 
 .location-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 10px;
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
-.location-card.saved {
-  position: static;
-  margin-bottom: 20px;
+.cards.saved-view {
+    height: auto;
+}
+
+.cards.saved-view .location-card {
+    margin-bottom: 1rem;
+}
+
+.empty-state {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
 }
